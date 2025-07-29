@@ -1,11 +1,144 @@
 <!DOCTYPE html>
-<html>
+<html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <title>My Website</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plácání much</title>
+    <style>
+        body {
+            background-color: lightgreen;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        canvas {
+            border: 5px solid darkgreen;
+            background-color: white;
+        }
+        h1 { font-size: 24px; color: darkgreen; font-family: 'Comic Sans MS', cursive;
+        }
+        #startScreen, #gameOverScreen {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #startScreen button, #gameOverScreen button {
+            margin-top: 10px;
+            padding: 10px;
+            font-size: 18px;
+        }
+    </style>
 </head>
 <body>
-  <h1>Hello, world!</h1>
-  <p>This is my website hosted on GitHub Pages.</p>
+    <h1>Plácání much</h1>
+    <div id="startScreen">
+        <p>Stiskněte tlačítko pro začátek hry</p>
+        <button onclick="startGame()">Start</button>
+    </div>
+    <div id="gameOverScreen" style="display: none;">
+        <p id="gameOverText"></p>
+        <button onclick="restartGame()">Restart</button>
+    </div>
+    <canvas id="gameCanvas" style="display: none;"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const startScreen = document.getElementById("startScreen");
+        const gameOverScreen = document.getElementById("gameOverScreen");
+        const gameOverText = document.getElementById("gameOverText");
+        canvas.width = 900;
+        canvas.height = 600;
+
+        let flies = [];
+        let score = 0;
+        let spawnRate = 2000;
+        let gameOver = false;
+
+        function startGame() {
+            startScreen.style.display = "none";
+            canvas.style.display = "block";
+            gameOver = false;
+            flies = [];
+            score = 0;
+            spawnRate = 2000;
+            gameLoop();
+            increaseSpawnRate();
+        }
+
+        function restartGame() {
+            gameOverScreen.style.display = "none";
+            startGame();
+        }
+
+        function spawnFly() {
+            if (gameOver) return;
+            let size = 24;
+            let x = Math.random() * (canvas.width - size);
+            let y = Math.random() * (canvas.height - size);
+            flies.push({ x, y, size });
+            if (flies.length > 10) {
+                endGame();
+            }
+        }
+
+        function drawFlies() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "black";
+            flies.forEach(fly => {
+                ctx.fillRect(fly.x, fly.y, fly.size, fly.size);
+            });
+            ctx.fillStyle = "black";
+            ctx.font = "20px 'Comic Sans MS'";
+            ctx.fillText("Skóre: " + score, 10, 30);
+        }
+
+        canvas.addEventListener("click", (event) => {
+            if (gameOver) return;
+            let rect = canvas.getBoundingClientRect();
+            let clickX = event.clientX - rect.left;
+            let clickY = event.clientY - rect.top;
+            
+            flies = flies.filter(fly => {
+                let hit = clickX >= fly.x && clickX <= fly.x + fly.size &&
+                          clickY >= fly.y && clickY <= fly.y + fly.size;
+                if (hit) score++;
+                return !hit;
+            });
+        });
+
+        function gameLoop() {
+            if (!gameOver) {
+                drawFlies();
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function increaseSpawnRate() {
+            if (spawnRate > 500) {
+                spawnRate -= 65;
+            }
+            setTimeout(() => {
+                spawnFly();
+                increaseSpawnRate();
+            }, spawnRate);
+        }
+
+        function endGame() {
+            gameOver = true;
+            gameOverText.textContent = "Prohrál jsi! Skóre: " + score;
+            gameOverScreen.style.display = "flex";
+            canvas.style.display = "none";
+        }
+    </script>
 </body>
 </html>
